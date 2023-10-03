@@ -37,10 +37,11 @@ def get_bottle_plan():
 
     # Initial logic: bottle all barrels into red potions.
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT SUM(ml_per_barrel) FROM barrels WHERE potion_type = 'RED'"))
+        result = connection.execute(sqlalchemy.text("SELECT num_red_ml FROM global_inventory"))
         red_ml = result.scalar()
         if red_ml:
             return [{"potion_type": [100, 0, 0, 0], "quantity": red_ml}]
+
 
     return [
             {

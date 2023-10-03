@@ -34,9 +34,11 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT SUM(quantity) FROM inventory WHERE potion_type = 'RED'"))
-        if result.scalar() < 10:
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
+        num_red_potions = result.scalar()
+        if num_red_potions < 10:
             return [{"sku": "SMALL_RED_BARREL", "quantity": 1}]
+
 
     return [
         {
