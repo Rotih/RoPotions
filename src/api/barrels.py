@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
+import sqlalchemy
+from src import database as db
 
 router = APIRouter(
     prefix="/barrels",
@@ -21,6 +23,8 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql_to_execute))
 
     return "OK"
 
@@ -29,6 +33,10 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text("SELECT SUM(quantity) FROM inventory WHERE potion_type = 'RED'"))
+        if result.scalar() < 10:
+            return [{"sku": "SMALL_RED_BARREL", "quantity": 1}]
 
     return [
         {
