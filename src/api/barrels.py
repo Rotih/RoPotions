@@ -38,7 +38,6 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         num_red_potions = result.scalar()
         if num_red_potions < 10:
             connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold - 100, num_red_ml = num_red_ml + 500"))
-            return [{"sku": "SMALL_RED_BARREL", "quantity": 1}]
 
 
 
