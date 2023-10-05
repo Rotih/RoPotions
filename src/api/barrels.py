@@ -22,9 +22,13 @@ class Barrel(BaseModel):
 @router.post("/deliver")
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
+
     print(barrels_delivered)
+    gold_to_subtract = barrels_delivered*50
+    ml_to_add = 500 * barrels_delivered
+
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql_to_execute))
+        connection.execute(sqlalchemy.text(f"UPDATE global_inventory SET gold = gold - {gold_to_subtract}, num_red_ml = num_red_ml + {ml_to_add}"))
 
     return "OK"
 
@@ -37,13 +41,16 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
         num_red_potions = result.scalar()
         if num_red_potions < 10:
-            connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold - 100, num_red_ml = num_red_ml + 500"))
+            return [
+                {
+                    "sku": "SMALL_RED_BARREL",
+                    "quantity": 1,
+                }
+            ]
+    
+    return []
+            
 
 
 
-    return [
-        {
-            "sku": "SMALL_RED_BARREL",
-            "quantity": 1,
-        }
-    ]
+

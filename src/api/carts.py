@@ -25,7 +25,7 @@ def create_cart(new_cart: NewCart):
 def get_cart(cart_id: int):
     """ """
 
-    return {}
+    return "{cart_id}/items"
 
 
 class CartItem(BaseModel):
@@ -46,6 +46,5 @@ class CartCheckout(BaseModel):
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
     with db.engine.begin() as connection:
-            result = connection.execute(sqlalchemy.text(""))
-
-    return {"total_potions_bought": 1, "total_gold_paid": 50}
+        connection.execute(sqlalchemy.text("UPDATE global_inventory SET gold = gold + 50, num_red_potions = num_red_potions - 1 WHERE num_red_potions > 0"))
+        return {"total_potions_bought": 1, "total_gold_paid": 50}
