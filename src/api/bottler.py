@@ -20,12 +20,16 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
     num_potions_delivered = len(potions_delivered)
-    num_red_ml_removed = num_potions_delivered * 100
+    num_redml_removed = num_potions_delivered * 100
 
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions + {num_potions_delivered}, num_red_ml = num_red_ml - {num_red_ml_removed}"))
-
-    return "OK"
+        sql_query = sqlalchemy.text("""
+            UPDATE global_inventory 
+            SET num_red_potions = num_red_potions + :num_potions_delivered, 
+                num_red_ml = num_red_ml - :num_redml_removed
+        """)
+        connection.execute(sql_query, num_potions_delivered=num_potions_delivered, num_redml_removed=num_redml_removed)
+        return "OK"
 
 # Gets called 4 times a day
 @router.post("/plan")
