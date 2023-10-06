@@ -34,7 +34,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             SET gold = gold - :gold_to_subtract, 
                 num_red_ml = num_red_ml + :ml_to_add
         """)
-        connection.execute(sql_query, gold_to_subtract=gold_to_subtract, ml_to_add=ml_to_add)
+        connection.execute(sql_query, {"gold_to_subtract": gold_to_subtract, "ml_to_add": ml_to_add})
 
         return "OK"
 
