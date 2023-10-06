@@ -19,7 +19,8 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
-    num_red_ml_removed = potions_delivered * 100
+    num_potions_delivered = len(potions_delivered)
+    num_red_ml_removed = num_potions_delivered * 100
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("UPDATE global_inventory SET num_red_potions = num_red_potions + {potions_delivered}, num_red_ml = num_red_ml - {num_red_ml_removed}"))
