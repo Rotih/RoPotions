@@ -14,18 +14,20 @@ router = APIRouter(
 class NewCart(BaseModel):
     customer: str
 
-
+carts=[]
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
-    return {"cart_id": 1}
+    cart_id = len(carts) + 1
+    cart = {"cart_id": cart_id, "customer": new_cart.customer}
+    carts.append(cart)
+    return cart
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
     """ """
-
-    return "{cart_id}/items"
+    return carts[cart_id-1]
 
 
 class CartItem(BaseModel):
