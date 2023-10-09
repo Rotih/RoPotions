@@ -24,6 +24,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
 
     print(barrels_delivered)
+
     num_barrels_delivered = len(barrels_delivered)
     gold_to_subtract = num_barrels_delivered*50
     ml_to_add = 500 * num_barrels_delivered
