@@ -31,9 +31,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         sql_query = sqlalchemy.text("""
             UPDATE global_inventory 
             SET num_:potion_color_potions = num_:potion_color_potions + :num_potions_delivered, 
-                num_red_ml = num_red_ml - :num_redml_removed
+                num_:potion_color_ml = num_:potion_color_ml - :num_ml_removed
         """)
-        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "num_redml_removed": potion.quantity * 100})
+        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "removed": potion.quantity * 100})
         return "OK"
 
 # Gets called 4 times a day
