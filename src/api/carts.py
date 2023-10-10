@@ -37,7 +37,7 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-    carts[cart_id-1].append(
+    carts[cart_id].append(
         {
             "sku": item_sku,
             "quantity": cart_item.quantity
