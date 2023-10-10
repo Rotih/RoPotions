@@ -52,13 +52,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     for barrel in wholesale_catalog:
         barrel_color = barrel.sku.split('_')[1].lower()
         if gold > barrel.price:
-            if (barrel_color == "red") & (result.num_red_potions < 9):
+            if (barrel_color == "red" & numred < 5):
                 numred += 1
                 gold = gold - barrel.price
-            elif (barrel_color == "green") & (result.num_green_potions < 6):
+            elif (barrel_color == "green" & numgreen < 2):
                 numgreen += 1
                 gold = gold - barrel.price
-            elif (barrel_color == "blue") & (result.num_blue_potions < 3):
+            elif (barrel_color == "blue" & numblue < 2):
                 numblue += 1
                 gold = gold - barrel.price
             
