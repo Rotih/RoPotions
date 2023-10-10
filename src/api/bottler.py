@@ -51,9 +51,9 @@ def get_bottle_plan():
     ret = []
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory"))
-        red_ml = result.num_red_ml.scalar()
-        green_ml = result.num_green_ml.scalar()
-        blue_ml = result.num_blue_ml.scalar()                
+        red_ml = result.first().num_red_ml
+        green_ml = result.first().num_green_ml
+        blue_ml = result.first().num_blue_ml                
         if red_ml/100 > 0:
             ret.append(
                 {
