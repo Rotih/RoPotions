@@ -58,21 +58,21 @@ def get_bottle_plan():
             ret.append(
                 {
                     "potion_type": [100, 0, 0, 0],
-                    "quantity": red_ml/100,
+                    "quantity": int(red_ml/100),
                 }
             )
         if green_ml/100 > 0:
             ret.append(
                 {
                     "potion_type": [0, 100, 0, 0],
-                    "quantity": green_ml/100,
+                    "quantity": int(green_ml/100),
                 }
             )
         if blue_ml/100 > 0:
             ret.append(
                 {
                     "potion_type": [0, 0, 100, 0],
-                    "quantity": blue_ml/100,
+                    "quantity": int(blue_ml/100),
                 }
             )
     return ret
