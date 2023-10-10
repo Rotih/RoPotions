@@ -43,19 +43,39 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions FROM global_inventory"))
-        num_red_potions = result.scalar()
-        if num_red_potions < 10:
-            return [
-                {
-                    "sku": "SMALL_RED_BARREL",
-                    "quantity": 1,
-                }
-            ]
-    
-    return []
+        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions, gold FROM global_inventory"))
+        result = result.first()
+        numred=0
+        numblue=0
+        numgreen=0
+        gold = result.gold
+    for barrel in wholesale_catalog:
+        barrel_color = barrel.sku.split('_')[1].lower()
+        if gold > barrel.price:
+            if (barrel_color == "red") & (result.num_red_potions < 9):
+                numred += 1
+                gold = gold - barrel.price
+            elif (barrel_color == "green") & (result.num_green_potions < 6):
+                numgreen += 1
+                gold = gold - barrel.price
+            elif (barrel_color == "blue") & (result.num_blue_potions < 3):
+                numblue += 1
+                gold = gold - barrel.price
             
-
+        return [
+        {
+            "sku": "SMALL_RED_BARREL",
+            "quantity": numred,
+        },
+        {
+            "sku": "SMALL_GREEN_BARREL",
+            "quantity": numgreen,
+        },
+        {
+            "sku": "SMALL_BLUE_BARREL",
+            "quantity": numblue,
+        }
+    ]
 
 
 
