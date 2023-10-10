@@ -33,7 +33,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             SET num_:potion_color_potions = num_:potion_color_potions + :num_potions_delivered, 
                 num_:potion_color_ml = num_:potion_color_ml - :num_ml_removed
         """)
-        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "removed": potion.quantity * 100})
+        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "num_ml_removed": potion.quantity * 100})
         return "OK"
 
 # Gets called 4 times a day
