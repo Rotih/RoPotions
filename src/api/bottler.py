@@ -19,16 +19,21 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
-    num_potions_delivered = len(potions_delivered)
-    num_redml_removed = num_potions_delivered * 100
+    for potion in potions_delivered:
+        if potion.potion_type[0] == 100:
+            potion_color = "red"
+        elif potion.potion_type[1] == 100:
+            potion_color = "green"
+        elif potion.potion_type[2] == 100:
+            potion_color = "blue"
 
     with db.engine.begin() as connection:
         sql_query = sqlalchemy.text("""
             UPDATE global_inventory 
-            SET num_red_potions = num_red_potions + :num_potions_delivered, 
+            SET num_:potion_color_potions = num_:potion_color_potions + :num_potions_delivered, 
                 num_red_ml = num_red_ml - :num_redml_removed
         """)
-        connection.execute(sql_query, {"num_potions_delivered": num_potions_delivered, "num_redml_removed": num_redml_removed})
+        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "num_redml_removed": potion.quantity * 100})
         return "OK"
 
 # Gets called 4 times a day
@@ -43,15 +48,31 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     # Initial logic: bottle all barrels into red potions.
+    ret = []
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml FROM global_inventory"))
-        red_ml = result.scalar()
-        num_potions = int(red_ml / 100)
-        if red_ml > 0:
-            return [
-                    {
-                        "potion_type": [100, 0, 0, 0],
-                        "quantity": num_potions,
-                    }
-                ]
-    return []
+        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml FROM global_inventory"))
+        red_ml = result.num_red_ml.scalar()
+        green_ml = result.num_green_ml.scalar()
+        blue_ml = result.num_blue_ml.scalar()                
+        if red_ml/100 > 0:
+            ret.append(
+                {
+                    "potion_type": [100, 0, 0, 0],
+                    "quantity": red_ml/100,
+                }
+            )
+        if green_ml/100 > 0:
+            ret.append(
+                {
+                    "potion_type": [0, 100, 0, 0],
+                    "quantity": green_ml/100,
+                }
+            )
+        if blue_ml/100 > 0:
+            ret.append(
+                {
+                    "potion_type": [0, 0, 100, 0],
+                    "quantity": blue_ml/100,
+                }
+            )
+    return ret
