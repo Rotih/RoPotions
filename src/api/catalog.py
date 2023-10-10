@@ -15,9 +15,9 @@ def get_catalog():
     catalog = []
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions FROM global_inventory"))
-        red_potions = result.scalar().num_red_potions
-        green_potions = result.scalar().num_green_potions
-        blue_potions = result.scalar().num_blue_potions               
+        red_potions = result.first().num_red_potions
+        green_potions = result.first().num_green_potions
+        blue_potions = result.first().num_blue_potions               
         if red_potions:
             catalog.append(
                 {
