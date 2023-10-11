@@ -25,17 +25,21 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     print(barrels_delivered)
     for barrel in barrels_delivered:
-
         barrel_color = barrel.sku.split('_')[1].lower()
+
+        # Dynamically construct the column name
+        barrel_color_ml = f"num_{barrel_color}_ml"
+
         with db.engine.begin() as connection:
-            sql_query = sqlalchemy.text("""
+            sql_query = sqlalchemy.text(f"""
                 UPDATE global_inventory 
                 SET gold = gold - :gold_to_subtract, 
-                    num_:barrel_color_ml = num_:barrel_color_ml + :ml_to_add
+                    {barrel_color_ml} = {barrel_color_ml} + :ml_to_add
             """)
-            connection.execute(sql_query, {"barrel_color": barrel_color, "gold_to_subtract": barrel.price * barrel.quantity, "ml_to_add": barrel.ml_per_barrel * barrel.quantity})
+            connection.execute(sql_query, {"gold_to_subtract": barrel.price * barrel.quantity, "ml_to_add": barrel.ml_per_barrel * barrel.quantity})
 
-            return "OK"
+
+    return "OK"
 
 # Gets called once a day
 @router.post("/plan")

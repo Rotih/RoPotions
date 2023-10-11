@@ -27,14 +27,17 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         elif potion.potion_type[2] == 100:
             potion_color = "blue"
 
-    with db.engine.begin() as connection:
-        sql_query = sqlalchemy.text("""
-            UPDATE global_inventory 
-            SET num_:potion_color_potions = num_:potion_color_potions + :num_potions_delivered, 
-                num_:potion_color_ml = num_:potion_color_ml - :num_ml_removed
-        """)
-        connection.execute(sql_query, {"potion_color": potion_color, "num_potions_delivered": potion.quantity, "num_ml_removed": potion.quantity * 100})
-        return "OK"
+        potion_num_color = f"num_{potion_color}_potions"
+        potion_ml_color = f"num_{potion_color}_ml"
+        
+        with db.engine.begin() as connection:
+            sql_query = sqlalchemy.text(f"""
+                UPDATE global_inventory 
+                SET {potion_num_color} = {potion_num_color} + :num_potions_delivered, 
+                    {potion_ml_color} = {potion_ml_color} - :num_ml_removed
+            """)
+            connection.execute(sql_query, {"num_potions_delivered": potion.quantity, "num_ml_removed": potion.quantity * 100})
+    return "OK"
 
 # Gets called 4 times a day
 @router.post("/plan")
