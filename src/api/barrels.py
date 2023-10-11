@@ -25,6 +25,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     print(barrels_delivered)
     for barrel in barrels_delivered:
+        print(barrel)
         barrel_color = barrel.sku.split('_')[1].lower()
 
         # Dynamically construct the column name
@@ -37,7 +38,6 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
                     {barrel_color_ml} = {barrel_color_ml} + :ml_to_add
             """)
             connection.execute(sql_query, {"gold_to_subtract": barrel.price * barrel.quantity, "ml_to_add": barrel.ml_per_barrel * barrel.quantity})
-
 
     return "OK"
 
