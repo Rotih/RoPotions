@@ -71,4 +71,4 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """)
            connection.execute(sql_query, {"item_color": item_color, "num_sold": cart[item_sku], "gold_to_add": gold_to_add})
 
-    return {"total_potions_bought": num_red + num_green + num_blue, "total_gold_paid": (num_red + num_green + num_blue) * 10}
+    return {"total_potions_bought": num_red + num_green + num_blue, "total_gold_paid": (num_red * 10 + num_green + num_blue)}
