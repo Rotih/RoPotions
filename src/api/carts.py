@@ -63,10 +63,10 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             gold_to_add = num_red * 10
         elif(item_color == "green"):
             num_green += cart[item_sku]
-            gold_to_add = num_green * 10
+            gold_to_add = num_green * 1
         elif(item_color == "blue"):
             num_blue += cart[item_sku]
-            gold_to_add = num_blue * 10
+            gold_to_add = num_blue * 1
         with db.engine.begin() as connection:
            sql_query = sqlalchemy.text("""
                 UPDATE global_inventory 
