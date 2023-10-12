@@ -63,13 +63,15 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         elif(item_color == "blue"):
             num_blue += cart[item_sku]
             gold_to_add = num_blue * 1
+
         potion_num_color = f"num_{item_color}_potions"
+        
         with db.engine.begin() as connection:
-           sql_query = sqlalchemy.text("""
+           sql_query = sqlalchemy.text(f"""
                 UPDATE global_inventory 
                 SET {potion_num_color} = {potion_num_color} - :num_sold,
                     gold = gold + :gold_to_add
             """)
-           connection.execute(sql_query, {"item_color": item_color, "num_sold": cart[item_sku], "gold_to_add": gold_to_add})
+           connection.execute(sql_query, {"num_sold": cart[item_sku], "gold_to_add": gold_to_add})
 
     return {"total_potions_bought": num_red + num_green + num_blue, "total_gold_paid": (num_red * 10 + num_green + num_blue)}
