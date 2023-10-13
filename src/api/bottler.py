@@ -62,7 +62,7 @@ def get_bottle_plan():
             bottle_plan.append(
                 {
                     "potion_type": [100, 0, 0, 0],
-                    "quantity": int(red_ml/100)
+                    "quantity": int(red_ml//100)
                 }
             )
         
@@ -70,7 +70,7 @@ def get_bottle_plan():
             bottle_plan.append(
                 {
                     "potion_type": [0, 100, 0, 0],
-                    "quantity": int(green_ml/100)
+                    "quantity": int(green_ml//100)
                 }
             )
         
@@ -78,7 +78,7 @@ def get_bottle_plan():
             bottle_plan.append(
                 {
                     "potion_type": [0, 0, 100, 0],
-                    "quantity": int(blue_ml/100)
+                    "quantity": int(blue_ml//100)
                 }
             )
 
