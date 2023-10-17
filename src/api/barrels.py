@@ -64,21 +64,25 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
+                gold -= barrel.price
             if (barrel_color == "green" and greenml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
+                gold -= barrel.price
             if (barrel_color == "blue" and blueml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
+                gold -= barrel.price
             if (barrel_color == "dark" and darkml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
+                gold -= barrel.price
 
     barrel_plan = []
     for barrel in plan:
