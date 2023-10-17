@@ -51,6 +51,8 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
             SELECT :cart_id, :quantity, potion_inventory.id
             FROM potion_inventory WHERE potion_inventory.sku = :item_sku
         """), [{"cart_id": cart_id, "quantity": cart_item.quantity, "item_sku": item_sku}])
+        
+    return "OK"
 
 
 class CartCheckout(BaseModel):
