@@ -50,7 +50,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     gold = result.gold
     redml = result.num_red_ml
-    greenml = result.num_gree_nml
+    greenml = result.num_green_ml
     blueml = result.num_blue_ml
     darkml = result.num_dark_ml
 
@@ -80,13 +80,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 else:
                     plan[barrel.sku] = 1
 
-    
+    barrel_plan = []
     for barrel in plan:
-        plan.append(
+        barrel_plan.append(
             {
                 "sku": barrel,
                 "quantity": plan[barrel]
             }
         )
     
-    return plan
+    return barrel_plan
