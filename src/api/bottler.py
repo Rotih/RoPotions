@@ -98,6 +98,7 @@ def get_bottle_plan():
                     plan[potion.sku][0] += 1
                 else:
                     plan[potion.sku] = [1, [potion.red, potion.green, potion.blue, potion.dark]]
+                num_potions += 1
                 
 
         for potion in plan:
