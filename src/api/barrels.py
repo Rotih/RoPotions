@@ -28,9 +28,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         print(barrel)
         barrel_color = barrel.sku.split('_')[1].lower()
 
-        # Dynamically construct the column name
         barrel_color_ml = f"num_{barrel_color}_ml"
-
+        
         with db.engine.begin() as connection:
             sql_query = sqlalchemy.text(f"""
                 UPDATE global_inventory 
