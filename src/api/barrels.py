@@ -58,7 +58,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     for barrel in wholesale_catalog:
         barrel_color = barrel.sku.split('_')[1].lower()
-        if gold > barrel.price:
+        if gold >= barrel.price:
             if (barrel_color == "red" and redml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
