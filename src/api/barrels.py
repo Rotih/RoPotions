@@ -29,7 +29,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         barrel_color = barrel.sku.split('_')[1].lower()
 
         barrel_color_ml = f"num_{barrel_color}_ml"
-        
+
         with db.engine.begin() as connection:
             sql_query = sqlalchemy.text(f"""
                 UPDATE global_inventory 
@@ -46,48 +46,47 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_potions, num_green_potions, num_blue_potions, gold FROM global_inventory"))
-        result = result.first()
-        numred=0
-        numblue=0
-        numgreen=0
-        gold = result.gold
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_dark_ml, num_green_ml  FROM global_inventory")).first()
+
+    gold = result.gold
+    redml = result.redml
+    greenml = result.greenml
+    blueml = result.blueml
+    darkml = result.darkml
+
+    plan = {}
+
     for barrel in wholesale_catalog:
         barrel_color = barrel.sku.split('_')[1].lower()
         if gold > barrel.price:
-            if (barrel_color == "red" & numred < 5):
-                numred += 1
-                gold = gold - barrel.price
-            elif (barrel_color == "green" & numgreen < 2):
-                numgreen += 1
-                gold = gold - barrel.price
-            elif (barrel_color == "blue" & numblue < 2):
-                numblue += 1
-                gold = gold - barrel.price
-            
-        barrel_plan = []
+            if (barrel_color == "red" and redml < 100):
+                if barrel.sku in plan:
+                    plan[barrel.sku] += 1
+                else:
+                    plan[barrel.sku] = 1
+            if (barrel_color == "green" and greenml < 100):
+                if barrel.sku in plan:
+                    plan[barrel.sku] += 1
+                else:
+                    plan[barrel.sku] = 1
+            if (barrel_color == "blue" and blueml < 100):
+                if barrel.sku in plan:
+                    plan[barrel.sku] += 1
+                else:
+                    plan[barrel.sku] = 1
+            if (barrel_color == "dark" and darkml < 100):
+                if barrel.sku in plan:
+                    plan[barrel.sku] += 1
+                else:
+                    plan[barrel.sku] = 1
 
-        if numred > 0:
-            barrel_plan.append(        
+    
+    for barrel in plan:
+        plan.append(
             {
-                "sku": "SMALL_RED_BARREL",
-                "quantity": numred,
-            },
+                "sku": barrel,
+                "quantity": plan[barrel]
+            }
         )
-        if numgreen > 0:
-            barrel_plan.append(        
-            {
-                "sku": "SMALL_GREEN_BARREL",
-                "quantity": numgreen,
-            },
-        )
-        if numblue > 0:
-            barrel_plan.append(        
-            {
-                "sku": "SMALL_BLUE_BARREL",
-                "quantity": numblue,
-            },
-        )
-        return barrel_plan
-
-
+    
+    return plan
