@@ -46,13 +46,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_dark_ml, num_green_ml  FROM global_inventory")).first()
+        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_dark_ml, num_green_ml FROM global_inventory")).first()
 
     gold = result.gold
-    redml = result.redml
-    greenml = result.greenml
-    blueml = result.blueml
-    darkml = result.darkml
+    redml = result.num_red_ml
+    greenml = result.num_gree_nml
+    blueml = result.num_blue_ml
+    darkml = result.num_dark_ml
 
     plan = {}
 
