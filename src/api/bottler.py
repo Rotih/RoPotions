@@ -19,24 +19,40 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
+    redml = 0
+    greenml = 0
+    blueml = 0
     for potion in potions_delivered:
         if potion.potion_type[0] == 100:
-            potion_color = "red"
-        elif potion.potion_type[1] == 100:
-            potion_color = "green"
-        elif potion.potion_type[2] == 100:
-            potion_color = "blue"
+            redml += 100
+        if potion.potion_type[1] == 100:
+            greenml += 100
+        if potion.potion_type[2] == 100:
+            blueml += 100
 
-        potion_num_color = f"num_{potion_color}_potions"
-        potion_ml_color = f"num_{potion_color}_ml"
+        red = potion.potion_type[0]
+        green = potion.potion_type[1]
+        blue = potion.potion_type[2]
         
         with db.engine.begin() as connection:
-            sql_query = sqlalchemy.text(f"""
-                UPDATE global_inventory 
-                SET {potion_num_color} = {potion_num_color} + :num_potions_delivered, 
-                    {potion_ml_color} = {potion_ml_color} - :num_ml_removed
+            sql_query = sqlalchemy.text("""
+                UPDATE potion_inventory 
+                SET quantity = quantity + :num_potions_delivered
+                WHERE red = :red
+                AND green = :green
+                AND blue = :blue
             """)
-            connection.execute(sql_query, {"num_potions_delivered": potion.quantity, "num_ml_removed": potion.quantity * 100})
+            connection.execute(sql_query,
+            {"num_potions_delivered": potion.quantity, "red": red, "green": green, "blue": blue })
+
+    with db.engine.begin() as connection:
+        sql_query = sqlalchemy.text("""
+            UPDATE global_inventory
+            SET num_red_ml = num_red_ml - :redml,
+            num_green_ml = num_green_ml - :greenml,
+            num_blue_ml = num_blue_ml - :blueml
+        """)
+        connection.execute(sql_query, {"redml": redml, "greenml": greenml, "blueml": blueml})
     return "OK"
 
 # Gets called 4 times a day
