@@ -83,7 +83,7 @@ def get_bottle_plan():
         blue_ml = result.num_blue_ml  
         dark_ml = result.num_dark_ml
 
-        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY quantity asc"))
+        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))
         num_potions = connection.execute(sqlalchemy.text("SELECT SUM(quantity) FROM potion_inventory")).scalar()
         plan = {}
         bottler = []
