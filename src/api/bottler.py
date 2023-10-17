@@ -82,11 +82,12 @@ def get_bottle_plan():
         dark_ml = result.num_dark_ml
 
         potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY quantity asc"))
+        num_potions = connection.execute(sqlalchemy.text("SELECT SUM(quantity) FROM potion_catalog")).scalar()
         plan = {}
         bottler = []
 
         for potion in potions:
-            if ((potion.red < red_ml) and (potion.green < green_ml) and (potion.blue < blue_ml) and (potion.dark < dark_ml)):
+            if (num_potions < 300 and ((potion.red <= red_ml) and (potion.green <= green_ml) and (potion.blue <= blue_ml) and (potion.dark <= dark_ml))):
                 red_ml -= potion.red
                 green_ml -= potion.green
                 blue_ml -= potion.blue
