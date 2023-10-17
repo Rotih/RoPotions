@@ -14,20 +14,28 @@ router = APIRouter(
 class NewCart(BaseModel):
     customer: str
 
-carts={}
+
 @router.post("/")
 def create_cart(new_cart: NewCart):
     """ """
-    cart_id = len(carts) + 1
-    carts[cart_id] = {}
-    
-    return {"cart_id": cart_id}
+    with db.engine.begin() as connection:
+        cart_id = connection.execute(sqlalchemy.text("""
+            INSERT INTO carts (customer)
+            VALUES (:customer)
+            RETURNING cart_id
+            """), [{"customer": new_cart.customer}]).scalar_one()
+    return {'cart_id': cart_id}
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
     """ """
-    return carts[cart_id-1]
+    with db.engine.begin() as connection:
+        cart = connection.execute(sqlalchemy.text("""
+            SELECT * FROM cart_items
+            WHERE cart_id = :cart_id
+            """), [{"cart_id": cart_id}])
+    return cart
 
 
 class CartItem(BaseModel):
@@ -37,9 +45,12 @@ class CartItem(BaseModel):
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     """ """
-    carts[cart_id][item_sku]= cart_item.quantity
-
-    return "OK"
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO cart_items (cart_id, quantity, potion_id)
+            SELECT :cart_id, :quantity, potion_inventory.id
+            FROM potion_inventory WHERE potion_inventory.sku = :item_sku
+        """), [{"cart_id": cart_id, "quantity": cart_item.quantity, "item_sku": item_sku}])
 
 
 class CartCheckout(BaseModel):
@@ -48,30 +59,32 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
-    cart = carts[cart_id]
-    num_red = 0
-    num_green = 0
-    num_blue = 0
-    for item_sku in cart:
-        item_color = item_sku.split('_')[0].lower()
-        if(item_color == "red"):
-            num_red += cart[item_sku]
-            gold_to_add = num_red * 10
-        elif(item_color == "green"):
-            num_green += cart[item_sku]
-            gold_to_add = num_green * 1
-        elif(item_color == "blue"):
-            num_blue += cart[item_sku]
-            gold_to_add = num_blue * 1
+    with db.engine.begin() as connection:
+        total_potions_bought = connection.execute(sqlalchemy.text("""
+            SELECT SUM(cart_items.quantity)
+            FROM cart_items
+            JOIN potion_inventory ON potion_inventory.id = cart_items.potion_id
+            WHERE cart_id = :cart_id
+            """), [{"cart_id": cart_id}]).scalar_one()
 
-        potion_num_color = f"num_{item_color}_potions"
-        
-        with db.engine.begin() as connection:
-           sql_query = sqlalchemy.text(f"""
-                UPDATE global_inventory 
-                SET {potion_num_color} = {potion_num_color} - :num_sold,
-                    gold = gold + :gold_to_add
-            """)
-           connection.execute(sql_query, {"num_sold": cart[item_sku], "gold_to_add": gold_to_add})
 
-    return {"total_potions_bought": num_red + num_green + num_blue, "total_gold_paid": (num_red + num_green + num_blue) * 100}
+        total_gold_paid = connection.execute(sqlalchemy.text("""
+            SELECT SUM(cart_items.quantity * potion_inventory.price)
+            FROM cart_items
+            JOIN potion_inventory ON potion_inventory.id = cart_items.potion_id
+            WHERE cart_id = :cart_id
+            """), [{"cart_id": cart_id}]).scalar_one()
+
+        connection.execute(sqlalchemy.text("""
+            UPDATE potion_inventory
+            SET quantity = potion_inventory.quantity - cart_items.quantity 
+            FROM cart_items
+            WHERE potion_inventory.id = cart_items.potion_id and cart_items.cart_id = :cart_id;
+            """), [{"cart_id": cart_id}])
+
+        connection.execute(sqlalchemy.text("""
+            UPDATE global_inventory
+            SET gold = gold + :total_gold_paid
+            """), [{"total_gold_paid": total_gold_paid}])
+
+    return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}
