@@ -19,19 +19,7 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
-    redml = 0
-    greenml = 0
-    blueml = 0
-    darkml = 0
     for potion in potions_delivered:
-        if potion.potion_type[0] == 100:
-            redml += 100
-        if potion.potion_type[1] == 100:
-            greenml += 100
-        if potion.potion_type[2] == 100:
-            blueml += 100
-        if potion.potion_type[3] == 100:
-            darkml += 100
 
         red = potion.potion_type[0]
         green = potion.potion_type[1]
@@ -50,15 +38,14 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             connection.execute(sql_query,
             {"num_potions_delivered": potion.quantity, "red": red, "green": green, "blue": blue, "dark": dark})
 
-    with db.engine.begin() as connection:
-        sql_query = sqlalchemy.text("""
-            UPDATE global_inventory
-            SET num_red_ml = num_red_ml - :redml,
-            num_green_ml = num_green_ml - :greenml,
-            num_blue_ml = num_blue_ml - :blueml,
-            num_dark_ml = num_dark_ml - :darkml
-        """)
-        connection.execute(sql_query, {"redml": redml, "greenml": greenml, "blueml": blueml, "darkml": darkml})
+            sql_query = sqlalchemy.text("""
+                UPDATE global_inventory
+                SET num_red_ml = num_red_ml - :redml,
+                num_green_ml = num_green_ml - :greenml,
+                num_blue_ml = num_blue_ml - :blueml,
+                num_dark_ml = num_dark_ml - :darkml
+            """)
+            connection.execute(sql_query, {"redml": red, "greenml": green, "blueml": blue, "darkml": dark})
     return "OK"
 
 # Gets called 4 times a day
