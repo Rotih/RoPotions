@@ -24,6 +24,36 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
 
     print(barrels_delivered)
+    redml = 0
+    greenml = 0
+    blueml = 0
+    darkml = 0
+    gold = 0
+    for barrel in barrels_delivered:
+        print(barrel)
+        barrel_color = barrel.sku.split('_')[1].lower()
+
+        if barrel_color == "red":
+            redml += barrel.ml_per_barrel * barrel.quantity
+        if barrel_color == "green":
+            greenml += barrel.ml_per_barrel * barrel.quantity
+        if barrel_color == "blue":
+            blueml += barrel.ml_per_barrel * barrel.quantity
+        if barrel_color == "dark":
+            darkml += barrel.ml_per_barrel * barrel.quantity
+        gold -= barrel.price * barrel.quantity
+
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO ml_changes (red_ml_change, green_ml_change, blue_ml_change, dark_ml_change)
+            VALUES (:redml, :greenml, :blueml, :darkml)
+            """), [{"redml": redml, "greenml": greenml, "blueml": blueml, "darkml": darkml}])
+        
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO gold_changes (gold_change)
+            VALUES (:gold)
+            """), [{"gold": gold}])
+    
     for barrel in barrels_delivered:
         print(barrel)
         barrel_color = barrel.sku.split('_')[1].lower()
@@ -64,7 +94,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
-                gold -= barrel.price
+                
             if (barrel_color == "green" and greenml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
