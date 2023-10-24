@@ -45,14 +45,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO ml_changes (red_ml_change, green_ml_change, blue_ml_change, dark_ml_change)
-            VALUES (:redml, :greenml, :blueml, :darkml)
-            """), [{"redml": redml, "greenml": greenml, "blueml": blueml, "darkml": darkml}])
-        
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO gold_changes (gold_change)
-            VALUES (:gold)
-            """), [{"gold": gold}])
+            INSERT INTO ledger_all (red_ml_change, green_ml_change, blue_ml_change, dark_ml_change, gold_change)
+            VALUES (:redml, :greenml, :blueml, :darkml, :gold)
+            """), [{"redml": redml, "greenml": greenml, "blueml": blueml, "darkml": darkml, "gold": gold}])
     
     for barrel in barrels_delivered:
         print(barrel)
@@ -76,13 +71,21 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT gold, num_red_ml, num_blue_ml, num_dark_ml, num_green_ml FROM global_inventory")).first()
+        result = connection.execute(sqlalchemy.text("""
+            SELECT 
+            SUM(gold_change) AS gold_total,
+            SUM(red_ml_change) AS red_ml_total,
+            SUM(blue_ml_change) AS blue_ml_total,
+            SUM(dark_ml_change) AS dark_ml_total,
+            SUM(green_ml_change) AS green_ml_total
+            FROM ledger_all
+        """)).one()
 
-    gold = result.gold
-    redml = result.num_red_ml
-    greenml = result.num_green_ml
-    blueml = result.num_blue_ml
-    darkml = result.num_dark_ml
+    gold = result.gold_total
+    redml = result.red_ml_total
+    blueml = result.blue_ml_total
+    darkml = result.dark_ml_total
+    greenml = result.green_ml_total
 
     plan = {}
 

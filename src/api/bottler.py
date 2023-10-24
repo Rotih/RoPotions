@@ -27,25 +27,23 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         dark = potion.potion_type[3]
         
         with db.engine.begin() as connection:
-            sql_query = sqlalchemy.text("""
-                UPDATE potion_inventory 
-                SET quantity = quantity + :num_potions_delivered
+            potion_id = connection.execute("""
+                SELECT potion_id
+                from potion_inventory
                 WHERE red = :red
                 AND green = :green
                 AND blue = :blue
                 AND dark = :dark
-            """)
-            connection.execute(sql_query,
-            {"num_potions_delivered": potion.quantity, "red": red, "green": green, "blue": blue, "dark": dark})
+                """, {"red": red, "green": green, "blue": blue, "dark": dark}).scalar_one()
 
             sql_query = sqlalchemy.text("""
-                UPDATE global_inventory
-                SET num_red_ml = num_red_ml - :redml,
-                num_green_ml = num_green_ml - :greenml,
-                num_blue_ml = num_blue_ml - :blueml,
-                num_dark_ml = num_dark_ml - :darkml
+                INSERT INTO ledger_all (red_ml_change, green_ml_change, blue_ml_change, dark_ml_change, potion_id, potion_quantity)
+                VALUES (-:redml, -:greenml, -:blueml, -:darkml, :potion_id, :potion_quantity)
             """)
-            connection.execute(sql_query, {"redml": red, "greenml": green, "blueml": blue, "darkml": dark})
+            connection.execute(sql_query, {"redml": red * potion.quantity,
+            "greenml": green * potion.quantity, "blueml": blue * potion.quantity,
+            "darkml": dark * potion.quantity, "potion_id": potion_id, "potion_quantity": potion.quantity})
+            
     return "OK"
 
 # Gets called 4 times a day
@@ -64,14 +62,21 @@ def get_bottle_plan():
     # Current Logic: bottle potions based on least amount in inventory. TODO: update to be smarter
     bottle_plan = []
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT num_red_ml, num_green_ml, num_blue_ml, num_dark_ml FROM global_inventory")).first()
+        result = connection.execute(sqlalchemy.text("""
+            SELECT 
+            SUM(red_ml_change) AS red_ml_total,
+            SUM(blue_ml_change) AS blue_ml_total,
+            SUM(dark_ml_change) AS dark_ml_total,
+            SUM(green_ml_change) AS green_ml_total,
+            SUM(potion_quantity) AS num_potions
+            FROM ledger_all""")).one()
         red_ml = result.num_red_ml
         green_ml = result.num_green_ml
         blue_ml = result.num_blue_ml  
         dark_ml = result.num_dark_ml
+        num_potions = result.num_potions
 
         potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))
-        num_potions = connection.execute(sqlalchemy.text("SELECT SUM(quantity) FROM potion_inventory")).scalar()
         plan = {}
         bottler = []
 

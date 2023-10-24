@@ -15,7 +15,12 @@ def get_catalog():
     catalog = []
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT * FROM potion_inventory"))
+        result = connection.execute(sqlalchemy.text("""
+            SELECT types.*, SUM(quantities.potion_quantity) as total_quantity
+            FROM potion_inventory AS types
+            LEFT JOIN ledger_all AS quantities ON types.id = quantities.potion_id
+            GROUP BY types.id
+        """))
 
     for potion in result:
         if potion.quantity:
