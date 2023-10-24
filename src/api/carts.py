@@ -78,14 +78,14 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """), [{"cart_id": cart_id}]).scalar_one()
 
         connection.execute(sqlalchemy.text("""
-            UPDATE potion_inventory
-            SET quantity = potion_inventory.quantity - cart_items.quantity 
+            INSERT INTO ledger_all(gold_change, potion_id, potion_quantity)
+            VALUES (:gold, :potion_id, -:potion_quantity)
             FROM cart_items
             WHERE potion_inventory.id = cart_items.potion_id and cart_items.cart_id = :cart_id;
             """), [{"cart_id": cart_id}])
 
         connection.execute(sqlalchemy.text("""
-            UPDATE global_inventory
+            INSERT INTO
             SET gold = gold + :total_gold_paid
             """), [{"total_gold_paid": total_gold_paid}])
 
