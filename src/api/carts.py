@@ -79,14 +79,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
 
         connection.execute(sqlalchemy.text("""
             INSERT INTO ledger_all(gold_change, potion_id, potion_quantity)
-            VALUES (:gold, :potion_id, -:potion_quantity)
+            VALUES (:gold, cart_items.potion_id, -:potion_quantity)
             FROM cart_items
             WHERE potion_inventory.id = cart_items.potion_id and cart_items.cart_id = :cart_id;
-            """), [{"cart_id": cart_id}])
-
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO
-            SET gold = gold + :total_gold_paid
-            """), [{"total_gold_paid": total_gold_paid}])
+            """), [{"cart_id": cart_id, "gold": total_gold_paid, "potion_quantity": total_potions_bought}])
 
     return {"total_potions_bought": total_potions_bought, "total_gold_paid": total_gold_paid}

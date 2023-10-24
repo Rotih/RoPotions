@@ -23,11 +23,11 @@ def get_catalog():
         """))
 
     for potion in result:
-        if potion.quantity:
+        if potion.total_quantity:
             catalog.append({
                "sku": potion.sku,
                "name": potion.name,
-               "quantity": potion.quantity,
+               "quantity": potion.total_quantity,
                "price": potion.price, 
                "potion_type": [potion.red, potion.green, potion.blue, potion.dark]
             })

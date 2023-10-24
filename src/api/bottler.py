@@ -70,10 +70,10 @@ def get_bottle_plan():
             SUM(green_ml_change) AS green_ml_total,
             SUM(potion_quantity) AS num_potions
             FROM ledger_all""")).one()
-        red_ml = result.num_red_ml
-        green_ml = result.num_green_ml
-        blue_ml = result.num_blue_ml  
-        dark_ml = result.num_dark_ml
+        red_ml = result.red_ml_total
+        green_ml = result.green_ml_total
+        blue_ml = result.blue_ml_total  
+        dark_ml = result.dark_ml_total
         num_potions = result.num_potions
 
         potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))
