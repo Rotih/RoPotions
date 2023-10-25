@@ -86,7 +86,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     blueml = result.blue_ml_total
     darkml = result.dark_ml_total
     greenml = result.green_ml_total
-
+    print(gold)
+    
     plan = {}
 
     for barrel in wholesale_catalog:
