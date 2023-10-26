@@ -87,7 +87,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     darkml = result.dark_ml_total
     greenml = result.green_ml_total
     print(gold)
-    
+
     plan = {}
 
     for barrel in wholesale_catalog:
@@ -98,7 +98,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     plan[barrel.sku] += 1
                 else:
                     plan[barrel.sku] = 1
-                
+                gold -= barrel.price
             if (barrel_color == "green" and greenml < 100):
                 if barrel.sku in plan:
                     plan[barrel.sku] += 1
