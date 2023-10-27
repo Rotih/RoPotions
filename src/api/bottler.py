@@ -29,12 +29,12 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         with db.engine.begin() as connection:
             potion_id = connection.execute("""
                 SELECT potion_id
-                from potion_inventory
+                FROM potion_inventory
                 WHERE red = :red
                 AND green = :green
                 AND blue = :blue
-                AND dark = :dark
-                """, {"red": red, "green": green, "blue": blue, "dark": dark}).scalar_one()
+                AND dark = :dark        
+            """, {"red": red, "green": green, "blue": blue, "dark": dark}).scalar_one()
 
             sql_query = sqlalchemy.text("""
                 INSERT INTO ledger_all (red_ml_change, green_ml_change, blue_ml_change, dark_ml_change, potion_id, potion_quantity)
