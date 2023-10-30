@@ -81,19 +81,24 @@ def get_bottle_plan():
         dark_ml = result.dark_ml_total
         num_potions = result.num_potions
 
-        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC")).fetchall()
-        
-        potions = sorted(potions, key=lambda x: x.quantity)
+        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))        
 
         plan = {}
 
         for potion in potions:
-            possible_potions = min(
-                red_ml // potion.red,
-                green_ml // potion.green,
-                blue_ml // potion.blue,
-                dark_ml // potion.dark
-            )
+            possible_potions = float('inf')
+
+            if potion.red > 0:
+                possible_potions = min(possible_potions, red_ml // potion.red)
+
+            if potion.green > 0:
+                possible_potions = min(possible_potions, green_ml // potion.green)
+
+            if potion.blue > 0:
+                possible_potions = min(possible_potions, blue_ml // potion.blue)
+
+            if potion.dark > 0:
+                possible_potions = min(possible_potions, dark_ml // potion.dark)
 
             while possible_potions > 0 and num_potions < 300:
                 red_ml -= potion.red
