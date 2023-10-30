@@ -28,7 +28,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         
         with db.engine.begin() as connection:
             potion_id = connection.execute(sqlalchemy.text(
-                """SELECT potion_id FROM potion_inventory
+                """SELECT id FROM potion_inventory
                 WHERE red = :red
                 AND green = :green
                 AND blue = :blue
