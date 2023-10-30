@@ -88,35 +88,51 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     greenml = result.green_ml_total
     print(gold)
 
+    brown_budget = gold * 0.2
+    budgets = {
+        "red": gold * 0.3 + brown_budget / 2,
+        "green": gold * 0.3 + brown_budget / 2,
+        "blue": gold * 0.1,
+        "dark": gold * 0.1
+    }
+
+    #calculate cost-effectiveness and sort the catalog accordingly
+    wholesale_catalog.sort(key=lambda barrel: barrel.ml_per_barrel / barrel.price, reverse=True)
+
     plan = {}
+    ml_thresholds = {
+        "red": 500,
+        "green": 500,
+        "blue": 300,
+        "dark": 300
+    }
 
     for barrel in wholesale_catalog:
         barrel_color = barrel.sku.split('_')[1].lower()
-        if gold >= barrel.price:
-            if (barrel_color == "red" and redml < 100):
-                if barrel.sku in plan:
-                    plan[barrel.sku] += 1
-                else:
-                    plan[barrel.sku] = 1
-                gold -= barrel.price
-            if (barrel_color == "green" and greenml < 100):
-                if barrel.sku in plan:
-                    plan[barrel.sku] += 1
-                else:
-                    plan[barrel.sku] = 1
-                gold -= barrel.price
-            if (barrel_color == "blue" and blueml < 100):
-                if barrel.sku in plan:
-                    plan[barrel.sku] += 1
-                else:
-                    plan[barrel.sku] = 1
-                gold -= barrel.price
-            if (barrel_color == "dark" and darkml < 100):
-                if barrel.sku in plan:
-                    plan[barrel.sku] += 1
-                else:
-                    plan[barrel.sku] = 1
-                gold -= barrel.price
+
+        if gold >= barrel.price and budgets.get(barrel_color, 0) >= barrel.price:
+            purchase_quantity = min(barrel.quantity, int(budgets[barrel_color] / barrel.price))
+
+            if purchase_quantity > 0:
+                if barrel_color == "red" and redml < ml_thresholds["red"]:
+                    plan[barrel.sku] = plan.get(barrel.sku, 0) + purchase_quantity
+                    gold -= barrel.price * purchase_quantity
+                    budgets[barrel_color] -= barrel.price * purchase_quantity
+
+                elif barrel_color == "green" and greenml < ml_thresholds["green"]:
+                    plan[barrel.sku] = plan.get(barrel.sku, 0) + purchase_quantity
+                    gold -= barrel.price * purchase_quantity
+                    budgets[barrel_color] -= barrel.price * purchase_quantity
+
+                elif barrel_color == "blue" and blueml < ml_thresholds["blue"]:
+                    plan[barrel.sku] = plan.get(barrel.sku, 0) + purchase_quantity
+                    gold -= barrel.price * purchase_quantity
+                    budgets[barrel_color] -= barrel.price * purchase_quantity
+
+                elif barrel_color == "dark" and darkml < ml_thresholds["dark"]:
+                    plan[barrel.sku] = plan.get(barrel.sku, 0) + purchase_quantity
+                    gold -= barrel.price * purchase_quantity
+                    budgets[barrel_color] -= barrel.price * purchase_quantity
 
     barrel_plan = []
     for barrel in plan:
@@ -126,5 +142,5 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 "quantity": plan[barrel]
             }
         )
-    
+
     return barrel_plan

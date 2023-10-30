@@ -59,7 +59,11 @@ def get_bottle_plan():
     # Initial logic: bottle all barrels into red potions.
 
     # Current Logic: bottle potions based on least amount in inventory. TODO: update to be smarter
+
+    ML_PER_POTION = 100
+
     bottle_plan = []
+
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT 
@@ -68,33 +72,47 @@ def get_bottle_plan():
             SUM(dark_ml_change) AS dark_ml_total,
             SUM(green_ml_change) AS green_ml_total,
             SUM(potion_quantity) AS num_potions
-            FROM ledger_all""")).one()
+            FROM ledger_all
+        """)).one()
+
         red_ml = result.red_ml_total
         green_ml = result.green_ml_total
         blue_ml = result.blue_ml_total  
         dark_ml = result.dark_ml_total
         num_potions = result.num_potions
 
-        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))
+        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC")).fetchall()
+        
+        potions = sorted(potions, key=lambda x: x.quantity)
+
         plan = {}
-        bottler = []
 
         for potion in potions:
-            if (num_potions < 300 and ((potion.red <= red_ml) and (potion.green <= green_ml) and (potion.blue <= blue_ml) and (potion.dark <= dark_ml))):
+            possible_potions = min(
+                red_ml // potion.red,
+                green_ml // potion.green,
+                blue_ml // potion.blue,
+                dark_ml // potion.dark
+            )
+
+            while possible_potions > 0 and num_potions < 300:
                 red_ml -= potion.red
                 green_ml -= potion.green
                 blue_ml -= potion.blue
                 dark_ml -= potion.dark
+
                 if potion.sku in plan:
                     plan[potion.sku][0] += 1
                 else:
                     plan[potion.sku] = [1, [potion.red, potion.green, potion.blue, potion.dark]]
+
+                possible_potions -= 1
                 num_potions += 1
-                
 
         for potion in plan:
-            bottler.append({
+            bottle_plan.append({
                 "potion_type": plan[potion][1],
                 "quantity": plan[potion][0]
             })
-        return bottler
+
+    return bottle_plan
