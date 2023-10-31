@@ -54,18 +54,68 @@ def search_orders(
     time is 5 total line items.
     """
 
+    if sort_col is search_sort_options.customer_name:
+        sort_column = db.carts.c.customer
+    elif sort_col == search_sort_options.item_sku:
+        sort_column = db.potion_inventory.c.sku
+    elif sort_col == search_sort_options.line_item_total:
+        sort_column = (db.cart_items.c.quantity * db.potion_inventory.c.price)
+    elif sort_col is search_sort_options.timestamp:
+        sort_column = db.ledger_all.c.created_at
+    else:
+        assert False, "Invalid sorting column provided."
+
+    sorted_column = sort_column.asc() if sort_order == search_sort_order.asc else sort_column.desc()
+
+    current_page_number = int(search_page) if search_page else 0
+    records_offset = current_page_number * 5
+
+    query = (
+        sqlalchemy.select(
+            db.cart_items.c.id.label("line_item_id"),
+            db.potion_inventory.c.sku.label("item_sku"),
+            db.carts.c.customer.label("customer_name"),
+            (db.cart_items.c.quantity * db.potion_inventory.c.price).label("order_total_price"),
+            db.ledger_all.c.created_at.label("order_timestamp"),
+        )
+        .join(db.carts, db.carts.c.cart_id == db.cart_items.c.cart_id)
+        .join(db.potion_inventory, db.potion_inventory.c.id == db.cart_items.c.potion_id)
+        .outerjoin(db.ledger_all, db.ledger_all.potion_id == db.potion_inventory.c.id)
+        .offset(records_offset)
+        .limit(5)
+        .order_by(sorted_column)
+    )
+
+    if customer_name:
+        query = query.where(db.carts.c.customer.ilike(f"%{customer_name}%"))
+    if potion_sku:
+        query = query.where(db.potion_inventory.c.sku.ilike(f"%{potion_sku}%"))
+
+    with db.engine.connect() as connection:
+        query_results = connection.execute(query).fetchall()
+
+    formatted_output = [
+        {
+            "line_item_id": row.line_item_id,
+            "item_sku": row.item_sku,
+            "customer_name": row.customer_name,
+            "line_item_total": row.order_total_price,
+            "timestamp": row.order_timestamp.isoformat()
+        }
+        for row in query_results
+    ]
+
+    total_records_query = query.with_only_columns([sqlalchemy.func.count()]).order_by(None)
+    with db.engine.connect() as connection:
+        total_record_count = connection.execute(total_records_query).scalar()
+
+    previous_page_token = str(current_page_number - 1) if current_page_number > 0 else ""
+    next_page_token = str(current_page_number + 1) if (current_page_number + 1) * 5 < total_record_count else ""
+
     return {
-        "previous": "",
-        "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
-            }
-        ],
+        "previous": previous_page_token,
+        "next": next_page_token,
+        "results": formatted_output
     }
 
 
