@@ -54,60 +54,65 @@ def search_orders(
     time is 5 total line items.
     """
 
-    if sort_col is search_sort_options.customer_name:
-        sort_column = db.carts.c.customer
-    elif sort_col == search_sort_options.item_sku:
-        sort_column = db.potion_inventory.c.sku
-    elif sort_col == search_sort_options.line_item_total:
-        sort_column = (db.cart_items.c.quantity * db.potion_inventory.c.price)
-    elif sort_col is search_sort_options.timestamp:
-        sort_column = db.ledger_all.c.created_at
-    else:
-        assert False, "Invalid sorting column provided."
+    sort_column_str = {
+        search_sort_options.customer_name: "carts.customer_name",
+        search_sort_options.item_sku: "potion_inventory.sku",
+        search_sort_options.line_item_total: "(cart_items.quantity * potion_inventory.price)",
+        search_sort_options.timestamp: "ledger_all.created_at",
+    }.get(sort_col)
+    
+    if not sort_column_str:
+        raise ValueError("Invalid sorting column provided.")
 
-    sorted_column = sort_column.asc() if sort_order == search_sort_order.asc else sort_column.desc()
-
+    order_direction = "ASC" if sort_order == search_sort_order.asc else "DESC"
+    
     current_page_number = int(search_page) if search_page else 0
     records_offset = current_page_number * 5
-
-    query = (
-        sqlalchemy.select(
-            db.cart_items.c.id.label("line_item_id"),
-            db.potion_inventory.c.sku.label("item_sku"),
-            db.carts.c.customer.label("customer_name"),
-            (db.cart_items.c.quantity * db.potion_inventory.c.price).label("order_total_price"),
-            db.ledger_all.c.created_at.label("order_timestamp"),
-        )
-        .join(db.carts, db.carts.c.cart_id == db.cart_items.c.cart_id)
-        .join(db.potion_inventory, db.potion_inventory.c.id == db.cart_items.c.potion_id)
-        .outerjoin(db.ledger_all, db.ledger_all.potion_id == db.potion_inventory.c.id)
-        .offset(records_offset)
-        .limit(5)
-        .order_by(sorted_column)
-    )
-
-    if customer_name:
-        query = query.where(db.carts.c.customer.ilike(f"%{customer_name}%"))
-    if potion_sku:
-        query = query.where(db.potion_inventory.c.sku.ilike(f"%{potion_sku}%"))
+    
+    sql_query = f"""
+        SELECT
+        cart_items.id AS line_item_id,
+        potion_inventory.sku AS item_sku,
+        carts.customer_name AS customer_name,
+        (cart_items.quantity * potion_inventory.price) AS order_total_price,
+        ledger_all.created_at AS order_timestamp
+        FROM cart_items
+        JOIN carts ON carts.cart_id = cart_items.cart_id
+        JOIN potion_inventory ON potion_inventory.id = cart_items.potion_id
+        LEFT JOIN ledger_all ON ledger_all.potion_id = potion_inventory.id
+        WHERE carts.customer_name LIKE %s
+        AND potion_inventory.sku LIKE %s
+        ORDER BY {sort_column_str} {order_direction}
+        LIMIT 5 OFFSET {records_offset}
+    """
+    
+    customer_name_filter = f"%{customer_name}%" if customer_name else "%"
+    potion_sku_filter = f"%{potion_sku}%" if potion_sku else "%"
 
     with db.engine.connect() as connection:
-        query_results = connection.execute(query).fetchall()
+        query_results = connection.execute(sql_query, (customer_name_filter, potion_sku_filter)).fetchall()
 
     formatted_output = [
         {
-            "line_item_id": row.line_item_id,
-            "item_sku": row.item_sku,
-            "customer_name": row.customer_name,
-            "line_item_total": row.order_total_price,
-            "timestamp": row.order_timestamp.isoformat()
+            "line_item_id": row[0],
+            "item_sku": row[1],
+            "customer_name": row[2],
+            "line_item_total": row[3],
+            "timestamp": row[4].isoformat() if row[4] else None
         }
         for row in query_results
     ]
 
-    total_records_query = query.with_only_columns([sqlalchemy.func.count()]).order_by(None)
+    count_query = f"""
+        SELECT COUNT(*)
+        FROM cart_items
+        JOIN carts ON carts.cart_id = cart_items.cart_id
+        JOIN potion_inventory ON potion_inventory.id = cart_items.potion_id
+        WHERE carts.customer_name LIKE %s
+        AND potion_inventory.sku LIKE %s
+    """
     with db.engine.connect() as connection:
-        total_record_count = connection.execute(total_records_query).scalar()
+        total_record_count = connection.execute(count_query, (customer_name_filter, potion_sku_filter)).scalar()
 
     previous_page_token = str(current_page_number - 1) if current_page_number > 0 else ""
     next_page_token = str(current_page_number + 1) if (current_page_number + 1) * 5 < total_record_count else ""
