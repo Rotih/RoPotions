@@ -25,6 +25,8 @@ def get_inventory():
         potions = connection.execute(sqlalchemy.text("SELECT SUM(potion_quantity) FROM ledger_all")).scalar()
 
     num_ml = result.num_red_ml + result.num_green_ml + result.num_blue_ml + result.num_dark_ml
+    print(result.gold)
+    print(potions)
     
     return {"number_of_potions": potions, "ml_in_barrels": num_ml, "gold": result.gold}
 

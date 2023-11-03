@@ -181,6 +181,21 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             JOIN potion_inventory ON potion_inventory.id = cart_items.potion_id
             WHERE cart_id = :cart_id
             """), [{"cart_id": cart_id}]).scalar_one()
+        
+        potion_id = connection.execute(sqlalchemy.text("""
+            SELECT potion_id
+            FROM cart_items
+            WHERE cart_id = :cart_id
+            """), [{"cart_id": cart_id}]).scalar_one()
+        
+        curr_num = connection.execute(sqlalchemy.text("""
+            SELECT SUM(potion_quantity)
+            FROM ledger_all
+            WHERE potion_id = :potion_id
+        """), [{"potion_id": potion_id}]).scalar_one()
+
+        if curr_num < total_potions_bought:
+            return {"total_potions_bought": 0, "total_gold_paid": 0}
 
 
         total_gold_paid = connection.execute(sqlalchemy.text("""
