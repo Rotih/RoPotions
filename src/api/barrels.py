@@ -89,9 +89,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     brown_budget = gold * 0.2
     budgets = {
-        "red": 0,
-        "green": 0,
-        "blue": gold * 0.4,
+        "red": gold * 0.2,
+        "green": gold * 0.1,
+        "blue": gold * 0.2,
         "dark": gold * 0.3
     }
 
