@@ -81,7 +81,12 @@ def get_bottle_plan():
         dark_ml = result.dark_ml_total
         num_potions = result.num_potions
 
-        potions = connection.execute(sqlalchemy.text("SELECT * from potion_inventory ORDER BY id DESC"))        
+        potions = connection.execute(sqlalchemy.text("""SELECT pi.*, SUM(la.potion_quantity) as total_quantity
+            FROM potion_inventory pi
+            JOIN ledger_all la ON pi.id = la.potion_id
+            GROUP BY pi.id
+            ORDER BY total_quantity ASC;
+            """))        
 
         plan = {}
 
