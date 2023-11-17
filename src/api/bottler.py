@@ -91,6 +91,7 @@ def get_bottle_plan():
         plan = {}
 
         for potion in potions:
+            print(potion)
             possible_potions = float('inf')
 
             if potion.red > 0:

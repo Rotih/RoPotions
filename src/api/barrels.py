@@ -89,10 +89,10 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     brown_budget = gold * 0.2
     budgets = {
-        "red": gold * 0.2,
-        "green": gold * 0.1,
-        "blue": gold * 0.2,
-        "dark": gold * 0.3
+        "red": 0,
+        "green": 0,
+        "blue": 0,
+        "dark": 0
     }
 
     #calculate cost-effectiveness and sort the catalog accordingly
@@ -102,7 +102,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     ml_thresholds = {
         "red": 500,
         "green": 500,
-        "blue": 300,
+        "blue": 1500,
         "dark": 300
     }
 
